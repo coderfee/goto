@@ -55,7 +55,8 @@ ROUTES={"github":"https://github.com/<username>","x":"https://x.com/<username>"}
 启动时会强制校验（配置错误会直接 500 并输出错误日志，快速失败）：
 
 - key 必须匹配 `^[a-z0-9][a-z0-9-]*$`
-- 目标必须是合法的 `https:` URL，且不允许内嵌凭据
+- 目标必须是合法的 `https:` URL（不允许内嵌凭据），或纯邮箱的 `mailto:` 地址（如 `mailto:you@example.com`）—— mailto 路由会返回一个自动调起访客邮箱客户端的页面
+- 任何值都可以用 `b64:<base64>` 形式存放（如 `b64:bWFpbHRvOnlvdUBleGFtcGxlLmNvbQ==`），避免明文出现在配置中，Worker 启动时自动解码
 
 修改绑定配置后，执行 `pnpm cf-typegen` 重新生成 `Env` 类型。
 

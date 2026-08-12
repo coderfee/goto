@@ -55,7 +55,8 @@ ROUTES={"github":"https://github.com/<username>","x":"https://x.com/<username>"}
 Rules enforced at startup (a bad config fails fast with a 500 and an error log):
 
 - keys must match `^[a-z0-9][a-z0-9-]*$`
-- targets must be valid `https:` URLs without embedded credentials
+- targets must be valid `https:` URLs without embedded credentials, or plain `mailto:` addresses (e.g. `mailto:you@example.com`) — mailto routes render a page that launches the visitor's mail client
+- any value may be stored as `b64:<base64>` (e.g. `b64:bWFpbHRvOnlvdUBleGFtcGxlLmNvbQ==`) to keep plaintext out of the config; the Worker decodes it at startup
 
 After changing bindings, re-run `pnpm cf-typegen` to regenerate `Env` types.
 

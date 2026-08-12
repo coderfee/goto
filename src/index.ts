@@ -1,15 +1,6 @@
 let cachedRoutes: Record<string, string> | undefined;
 
-function errorPage(status: number, message: string, headers: Record<string, string> = {}): Response {
-	const digits = String(status).split('');
-	const code = digits.map((d, i) => (i > 0 ? `<span class="slash">/</span>${d}` : d)).join('');
-	const html = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${status} — goto</title>
-<style>
+const COMMON_STYLE = `
   body {
     margin: 0;
     min-height: 100vh;
@@ -27,7 +18,18 @@ function errorPage(status: number, message: string, headers: Record<string, stri
   .msg { color: #9ca3af; font-size: 1rem; }
   a { color: #6366f1; text-decoration: none; }
   a:hover { text-decoration: underline; }
-</style>
+`;
+
+function errorPage(status: number, message: string, headers: Record<string, string> = {}): Response {
+	const digits = String(status).split('');
+	const code = digits.map((d, i) => (i > 0 ? `<span class="slash">/</span>${d}` : d)).join('');
+	const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${status} — goto</title>
+<style>${COMMON_STYLE}</style>
 </head>
 <body>
   <div class="code">${code}</div>
@@ -36,6 +38,29 @@ function errorPage(status: number, message: string, headers: Record<string, stri
 </body>
 </html>`;
 	return new Response(html, { status, headers: { 'content-type': 'text/html; charset=utf-8', ...headers } });
+}
+
+// mailto 协议不能被 302 的 Location 头可靠调起（Chrome 等会静默忽略），
+// 需要返回一个页面，用 meta refresh + JS 触发邮件客户端。
+function mailtoPage(mailto: string): Response {
+	const address = mailto.slice('mailto:'.length);
+	const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="0; url=${mailto}">
+<title>mail — goto</title>
+<style>${COMMON_STYLE}</style>
+</head>
+<body>
+  <div class="code">&#64;</div>
+  <p class="msg">opening your mail client&hellip;</p>
+  <a href="${mailto}">${address}</a>
+  <script>window.location.href = ${JSON.stringify(mailto)};</script>
+</body>
+</html>`;
+	return new Response(html, { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } });
 }
 
 function getRoutes(env: Env): Record<string, string> {
@@ -56,11 +81,28 @@ function getRoutes(env: Env): Record<string, string> {
 		if (!/^[a-z0-9][a-z0-9-]*$/.test(key)) {
 			throw new Error(`Invalid route key: ${key}`);
 		}
+		// 值可以用 "b64:<base64>" 形式存放（如邮箱地址），运行时解码，避免明文出现在配置里
+		let raw = String(value);
+		if (raw.startsWith('b64:')) {
+			try {
+				raw = atob(raw.slice(4));
+			} catch {
+				throw new Error(`Invalid base64 value for route "${key}"`);
+			}
+		}
 		let target: URL;
 		try {
-			target = new URL(String(value));
+			target = new URL(raw);
 		} catch {
 			throw new Error(`Invalid target URL for route "${key}"`);
+		}
+		if (target.protocol === 'mailto:') {
+			// mailto 目标：仅允许纯邮箱地址，不允许 header 参数（?subject=...），避免注入
+			if (!/^mailto:[\w.+-]+@[\w-]+(\.[\w-]+)+$/.test(target.href)) {
+				throw new Error(`Invalid mailto target for route "${key}"`);
+			}
+			routes[key] = target.href;
+			continue;
 		}
 		if (target.protocol !== 'https:' || target.username || target.password) {
 			throw new Error(`Unsafe target URL for route "${key}"`);
@@ -105,6 +147,11 @@ export default {
 		if (!target) {
 			log('not_found', 404);
 			return errorPage(404, 'this goto goes nowhere.');
+		}
+
+		if (target.startsWith('mailto:')) {
+			log('mailto', 200, target);
+			return mailtoPage(target);
 		}
 
 		const suffix = rest.length > 0 ? `/${rest.join('/')}` : '';

@@ -1,1 +1,1 @@
-ROUTES={"github":"https://github.com/<username>","x":"https://x.com/<username>","rss":"https://example.com/rss.xml"}
+ROUTES={"github":"https://github.com/<username>","x":"https://x.com/<username>","rss":"https://example.com/rss.xml","mail":"b64:bWFpbHRvOnlvdUBleGFtcGxlLmNvbQ=="}

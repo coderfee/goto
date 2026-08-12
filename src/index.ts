@@ -72,17 +72,17 @@ export default {
 				}),
 			);
 
-		if (!key) {
-			log('home', 200);
-			return homePage(url.origin);
-		}
-
 		let routes: Record<string, string>;
 		try {
 			routes = getRoutes(env);
 		} catch (error) {
 			console.error(`Failed to load ROUTES: ${error instanceof Error ? error.message : String(error)}`);
 			return errorPage(500, 'goto is misconfigured.');
+		}
+
+		if (!key) {
+			log('home', 200);
+			return homePage(routes, url.origin);
 		}
 
 		const target = routes[key];

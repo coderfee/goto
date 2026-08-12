@@ -5,11 +5,11 @@
 A tiny short-link redirect service running on Cloudflare Workers. Map short paths on your own domain to anywhere:
 
 ```
-go.coderfee.com/github  ->  https://github.com/coderfee
-go.coderfee.com/x       ->  https://x.com/coderfee
+go.example.com/github  ->  https://github.com/<username>
+go.example.com/x       ->  https://x.com/<username>
 ```
 
-Trailing paths and query strings are forwarded, so `go.coderfee.com/github/goto?tab=readme` lands on `https://github.com/coderfee/goto?tab=readme`.
+Trailing paths and query strings are forwarded, so `go.example.com/github/goto?tab=readme` lands on `https://github.com/<username>/goto?tab=readme`.
 
 ## Features
 
@@ -34,7 +34,7 @@ Try it:
 ```bash
 curl -sI http://localhost:8788/github
 # HTTP/1.1 302 Found
-# Location: https://github.com/coderfee
+# Location: https://github.com/<username>
 ```
 
 ## Configuration
@@ -42,7 +42,7 @@ curl -sI http://localhost:8788/github
 Routes are defined in the `ROUTES` environment variable as a JSON object mapping a short key to an `https://` target:
 
 ```json
-ROUTES={"github":"https://github.com/coderfee","x":"https://x.com/coderfee"}
+ROUTES={"github":"https://github.com/<username>","x":"https://x.com/<username>"}
 ```
 
 - **Local**: put it in `.dev.vars` (git-ignored)
@@ -65,7 +65,7 @@ After changing bindings, re-run `pnpm cf-typegen` to regenerate `Env` types.
 2. Point the custom domain at the Worker in `wrangler.jsonc`:
 
    ```jsonc
-   "routes": [{ "pattern": "go.coderfee.com", "custom_domain": true }]
+   "routes": [{ "pattern": "go.example.com", "custom_domain": true }]
    ```
 
 3. Deploy and set the routes secret:
@@ -99,7 +99,7 @@ Git hooks are managed by [lefthook](https://lefthook.dev) (installed automatical
 
 1. Take the first path segment as the route key.
 2. Look it up in `ROUTES` (parsed once and cached in module scope).
-3. 302-redirect to `target + remaining path + query`; unknown keys get a 404 with the route list.
+3. 302-redirect to `target + remaining path + query`; unknown keys get a plain 404 (the route table is never exposed).
 
 ## License
 

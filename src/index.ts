@@ -1,5 +1,43 @@
 let cachedRoutes: Record<string, string> | undefined;
 
+function errorPage(status: number, message: string, headers: Record<string, string> = {}): Response {
+	const digits = String(status).split('');
+	const code = digits.map((d, i) => (i > 0 ? `<span class="slash">/</span>${d}` : d)).join('');
+	const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${status} — goto</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: #0f1115;
+    color: #e6e6e6;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .code { font-size: 5rem; font-weight: 700; letter-spacing: 0.1em; }
+  .code .slash { color: #6366f1; }
+  .msg { color: #9ca3af; font-size: 1rem; }
+  a { color: #6366f1; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="code">${code}</div>
+  <p class="msg">${message}</p>
+  <a href="/">&#8592; back to /</a>
+</body>
+</html>`;
+	return new Response(html, { status, headers: { 'content-type': 'text/html; charset=utf-8', ...headers } });
+}
+
 function getRoutes(env: Env): Record<string, string> {
 	if (cachedRoutes) return cachedRoutes;
 
@@ -37,7 +75,7 @@ function getRoutes(env: Env): Record<string, string> {
 export default {
 	async fetch(request, env): Promise<Response> {
 		if (request.method !== 'GET' && request.method !== 'HEAD') {
-			return new Response('Method Not Allowed', { status: 405 });
+			return errorPage(405, 'goto only accepts GET.', { allow: 'GET, HEAD' });
 		}
 
 		const url = new URL(request.url);
@@ -60,16 +98,13 @@ export default {
 			routes = getRoutes(env);
 		} catch (error) {
 			console.error(`Failed to load ROUTES: ${error instanceof Error ? error.message : String(error)}`);
-			return new Response('Internal Server Error', { status: 500 });
+			return errorPage(500, 'goto is misconfigured.');
 		}
 
 		const target = key ? routes[key] : undefined;
 		if (!target) {
 			log('not_found', 404);
-			const available = Object.keys(routes)
-				.map((route) => `/${route} -> ${routes[route]}`)
-				.join('\n');
-			return new Response(`Not Found\n\nAvailable routes:\n${available}\n`, { status: 404 });
+			return errorPage(404, 'this goto goes nowhere.');
 		}
 
 		const suffix = rest.length > 0 ? `/${rest.join('/')}` : '';

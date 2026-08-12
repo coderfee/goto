@@ -5,11 +5,11 @@
 一个运行在 Cloudflare Workers 上的极简短链跳转服务。把自己域名下的短路径映射到任意地址：
 
 ```
-go.coderfee.com/github  ->  https://github.com/coderfee
-go.coderfee.com/x       ->  https://x.com/coderfee
+go.example.com/github  ->  https://github.com/<username>
+go.example.com/x       ->  https://x.com/<username>
 ```
 
-剩余路径和查询参数会透传，例如 `go.coderfee.com/github/goto?tab=readme` 会跳转到 `https://github.com/coderfee/goto?tab=readme`。
+剩余路径和查询参数会透传，例如 `go.example.com/github/goto?tab=readme` 会跳转到 `https://github.com/<username>/goto?tab=readme`。
 
 ## 特性
 
@@ -34,7 +34,7 @@ pnpm dev                         # http://localhost:8788
 ```bash
 curl -sI http://localhost:8788/github
 # HTTP/1.1 302 Found
-# Location: https://github.com/coderfee
+# Location: https://github.com/<username>
 ```
 
 ## 配置
@@ -42,7 +42,7 @@ curl -sI http://localhost:8788/github
 路由通过 `ROUTES` 环境变量定义，JSON 对象：短链 key -> `https://` 目标地址：
 
 ```json
-ROUTES={"github":"https://github.com/coderfee","x":"https://x.com/coderfee"}
+ROUTES={"github":"https://github.com/<username>","x":"https://x.com/<username>"}
 ```
 
 - **本地**：写在 `.dev.vars`（已被 gitignore）
@@ -65,7 +65,7 @@ ROUTES={"github":"https://github.com/coderfee","x":"https://x.com/coderfee"}
 2. 在 `wrangler.jsonc` 中把自定义域名指向 Worker：
 
    ```jsonc
-   "routes": [{ "pattern": "go.coderfee.com", "custom_domain": true }]
+   "routes": [{ "pattern": "go.example.com", "custom_domain": true }]
    ```
 
 3. 部署并设置路由 secret：
@@ -99,7 +99,7 @@ Git hooks 由 [lefthook](https://lefthook.dev) 管理（`pnpm install` 时自动
 
 1. 取路径第一段作为路由 key。
 2. 在 `ROUTES` 中查找（解析一次后缓存在模块作用域）。
-3. 302 跳转到 `目标地址 + 剩余路径 + query`；未匹配的 key 返回 404 及可用路由列表。
+3. 302 跳转到 `目标地址 + 剩余路径 + query`；未匹配的 key 返回纯 404（路由表不对外暴露）。
 
 ## License
 

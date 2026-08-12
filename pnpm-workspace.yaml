@@ -4,5 +4,6 @@
 # ERR_PNPM_IGNORED_BUILDS.
 allowBuilds:
   esbuild: true
+  lefthook: true
   sharp: true
   workerd: true

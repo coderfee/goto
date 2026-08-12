@@ -96,11 +96,8 @@ Git hooks are managed by [lefthook](https://lefthook.dev) (installed automatical
 
 ## How It Works
 
-`src/index.ts` is the whole service (~100 lines):
-
-1. Take the first path segment as the route key.
-2. Look it up in `ROUTES` (parsed once and cached in module scope).
-3. 302-redirect to `target + remaining path + query`; unknown keys get a plain 404 (the route table is never exposed).
+- `src/index.ts` — request handling: first path segment is the route key, looked up in `ROUTES` (parsed once and cached in module scope). 302-redirect to `target + remaining path + query`; unknown keys get a themed 404; `mailto:` targets render a page that launches the mail client; `/` serves a small branded homepage.
+- `src/html.ts` — all HTML pages (homepage, error pages, mailto page) sharing one themed shell: light/dark via `prefers-color-scheme`, themed favicon, SEO meta on the homepage, `noindex` on error and mailto pages.
 
 ## License
 

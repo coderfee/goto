@@ -96,11 +96,8 @@ Git hooks 由 [lefthook](https://lefthook.dev) 管理（`pnpm install` 时自动
 
 ## 实现原理
 
-整个服务就是 `src/index.ts`（约 100 行）：
-
-1. 取路径第一段作为路由 key。
-2. 在 `ROUTES` 中查找（解析一次后缓存在模块作用域）。
-3. 302 跳转到 `目标地址 + 剩余路径 + query`；未匹配的 key 返回纯 404（路由表不对外暴露）。
+- `src/index.ts` —— 请求处理：取路径第一段作为路由 key，在 `ROUTES` 中查找（解析一次后缓存在模块作用域），302 跳转到 `目标地址 + 剩余路径 + query`；未匹配的 key 返回主题化 404；`mailto:` 目标返回调起邮件客户端的页面；`/` 提供品牌首页。
+- `src/html.ts` —— 所有 HTML 页面（首页、错误页、mailto 页）共用一套主题外壳：`prefers-color-scheme` 深浅色自适应、主题化 favicon、首页带 SEO meta、错误页和 mailto 页标记 `noindex`。
 
 ## License
 

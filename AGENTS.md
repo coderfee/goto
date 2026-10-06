@@ -4,38 +4,20 @@ STOP. Your knowledge of Cloudflare Workers APIs and limits may be outdated. Alwa
 
 ## Docs
 
-- https://developers.cloudflare.com/workers/
+Base: https://developers.cloudflare.com/
+
+- Workers: `/workers/`
+- Product docs: `/kv/` · `/r2/` · `/d1/` · `/durable-objects/` · `/queues/` · `/vectorize/` · `/workers-ai/` · `/agents/`
+- Limits and quotas: the product's `/platform/limits/` page, e.g. `/workers/platform/limits`
+- Errors: `/workers/observability/errors/` — Error 1102 means CPU/memory exceeded, resolve it against the limits page
+- Node.js compatibility: `/workers/runtime-apis/nodejs/`
 - MCP: `https://docs.mcp.cloudflare.com/mcp`
 
-For all limits and quotas, retrieve from the product's `/platform/limits/` page. eg. `/workers/platform/limits`
+If the application uses Durable Objects or Workflows, also follow its rules:
+
+- Durable Objects: `/durable-objects/best-practices/rules-of-durable-objects/`
+- Workflows: `/workflows/build/rules-of-workflows/`
 
 ## Commands
 
-| Command | Purpose |
-|---------|---------|
-| `npx wrangler dev` | Local development |
-| `npx wrangler deploy` | Deploy to Cloudflare |
-| `npx wrangler types` | Generate TypeScript types |
-
-Run `wrangler types` after changing bindings in wrangler.jsonc.
-
-## Node.js Compatibility
-
-https://developers.cloudflare.com/workers/runtime-apis/nodejs/
-
-## Errors
-
-- **Error 1102** (CPU/Memory exceeded): Retrieve limits from `/workers/platform/limits/`
-- **All errors**: https://developers.cloudflare.com/workers/observability/errors/
-
-## Product Docs
-
-Retrieve API references and limits from:
-`/kv/` · `/r2/` · `/d1/` · `/durable-objects/` · `/queues/` · `/vectorize/` · `/workers-ai/` · `/agents/`
-
-## Best Practices (conditional)
-
-If the application uses Durable Objects or Workflows, refer to the relevant best practices:
-
-- Durable Objects: https://developers.cloudflare.com/durable-objects/best-practices/rules-of-durable-objects/
-- Workflows: https://developers.cloudflare.com/workflows/build/rules-of-workflows/
+Scripts live in `package.json`. `cf-typegen` runs `wrangler types` — run it after changing bindings in `wrangler.jsonc`.
